@@ -30,14 +30,16 @@
 # Created:     17/06/2024
 # -------------------------------------------------------------------------------
 import click
+from datetime import datetime
 from .logo import logo
 from .module_log import *
 from .version import get_version
 
+
 @click.command()
-@click.option('--dataset',  type=click.STRING, required=False, help="The dataset to download. Default is 'COSMO-2I-RUC'.")
+@click.option('--dataset',  type=click.STRING, required=False, default="COSMO-2I-RUC" ,help="The dataset to download. Default is 'COSMO-2I-RUC'.")
 @click.option('--date', type=click.STRING, required=False,  help="The datetime to download. Default is latest datetime available.")
-@click.option('--out', type=click.Path(exists=False), required=False, help="The output file name.")
+@click.option('--out', type=click.Path(exists=False), required=False, default="", help="The output file name.")
 @click.option('--version', is_flag=True, required=False, default=False, help="Print the version.")
 @click.option('--debug', is_flag=True, required=False, default=False,   help="Debug mode.")
 @click.option('--verbose', is_flag=True, required=False, default=False, help="Print some words more about what is doing.")
@@ -53,6 +55,37 @@ def main(dataset, date, out, version, debug ,verbose):
         click.echo(f"v{get_version()}")
     # do something with args
     # 
+
+    # check args
+    if not date:
+        # search the latest datetime available for download
+        date = datetime.now()
+        # floor the datetime to the nearest 3hour
+        date = date.replace(minute=0, second=0, microsecond=0)
+        date = date.replace(hour=date.hour - date.hour % 3)
+        Logger.info(f"Searching the latest datetime available for download:{date}")
+        # TODO:
+        # try to download the dataset if not available try the previous datetime
+        counter = 0
+        while counter < 12:
+            try:
+                # download the dataset
+                raise Exception("Not available")
+                break
+            except:
+                counter += 1
+                if date.hour-3 < 0:
+                    date = date.replace(day=date.day - 1)
+                    date = date.replace(hour=21)
+                else:
+                    date = date.replace(hour=date.hour - 3)
+                Logger.info(f"Searching the latest datetime available for download:{date}")
+
+        
+
+    if not out:
+        out = f"{dataset}_{date.strftime('%Y%m%d%H')}.tif"
+        Logger.info(f"Output file name:{out}")
 
 
     click.echo(click.style(f"Hello world!", fg="bright_green", bold=True))
