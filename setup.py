@@ -19,7 +19,11 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
+        'wheel',
+        'setuptools',
         'click',
+        'eccodes',
+        'gdal'
     ],
     entry_points="""
       [console_scripts]

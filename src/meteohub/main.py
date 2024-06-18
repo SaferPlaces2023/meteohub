@@ -31,9 +31,9 @@
 # -------------------------------------------------------------------------------
 import click
 from datetime import datetime
-from .logo import logo
+from .module_logo import logo
 from .module_log import *
-from .version import get_version
+from .module_version import get_version
 
 
 @click.command()
