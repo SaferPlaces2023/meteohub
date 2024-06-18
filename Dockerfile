@@ -1,4 +1,5 @@
-FROM ubuntu:latest
+#FROM ubuntu:latest
+FROM ubuntu:24.04
 
 # Install dependencies
 RUN apt-get update
