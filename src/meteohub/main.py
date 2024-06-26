@@ -31,6 +31,8 @@
 # -------------------------------------------------------------------------------
 import click
 from datetime import datetime
+
+from .module_request import download_file
 from .module_logo import logo
 from .module_log import *
 from .module_version import get_version
@@ -81,11 +83,17 @@ def main(dataset, date, out, version, debug ,verbose):
                     date = date.replace(hour=date.hour - 3)
                 Logger.info(f"Searching the latest datetime available for download:{date}")
 
-        
-
+    
+    
     if not out:
         out = f"{dataset}_{date.strftime('%Y%m%d%H')}.tif"
-        Logger.info(f"Output file name:{out}")
+    
+    try:
+        file_grib = download_file(dataset, out=out)
+    except Exception as e:
+        Logger.error(f"Error downloading the file:{e}")
+        return False
+    Logger.info(f"Output file name:{out}")
 
 
     click.echo(click.style(f"Hello world!", fg="bright_green", bold=True))
