@@ -1,6 +1,8 @@
 import requests
 import pandas as pd 
 from .module_log import *
+import os
+
 
 def download_file(dataset, date=None, out=None, time_delta=3):
     url = f"https://meteohub.mistralportal.it/api/datasets/{dataset}/opendata"
@@ -18,8 +20,12 @@ def download_file(dataset, date=None, out=None, time_delta=3):
     else:
         files = files[(files['date'] >= date_start) & (files['date'] <= date_end)]
         
-    out = out if out else files['filename'].values[0]+".tif"
+    out = out if out else files['filename'].values[0]
 
+    if os.path.exists(out):
+        Logger.info(f"File already exists: {out}")
+        return out
+    
     for filename in files['filename']:
         url = f"https://meteohub.mistralportal.it/api/opendata/{filename}"
         # NOTE the stream=True parameter below

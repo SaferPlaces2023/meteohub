@@ -2,3 +2,8 @@ gdal==3.4.1
 eccodes
 requests
 pandas
+xarray[complete]
+ecmwflibs 
+pygrib 
+cfgrib
+rasterio
