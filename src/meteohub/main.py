@@ -67,6 +67,7 @@ def main(dataset, date, out, varname, bbox, version, debug ,verbose):
         click.echo(logo())
     if version:
         click.echo(f"v{get_version()}")
+        return True
     # do something with args
     # 
 
