@@ -103,12 +103,14 @@ def main(dataset, date, out, varname, bbox, version, debug ,verbose):
         return False
     Logger.info(f"Grib file name:{file_grib}")
 
-    df = get_grib_variable(file_grib, varname)
+    df = get_grib_variable(file_grib, varname, bbox)
 
-    out_tiff = out.replace('.grib', '.tif')
+    if not out:
+        out_tiff = file_grib.replace('.grib', '.tif')
 
+    Logger.info(f"Output tif file name:{out_tiff}")
     try:
-        dataframe_to_tiff(df, varname, bbox, out_tiff)
+        dataframe_to_tiff(df, varname, out_tiff)
     except Exception as e:
         Logger.error(f"Error converting the file:{e}")
         return False

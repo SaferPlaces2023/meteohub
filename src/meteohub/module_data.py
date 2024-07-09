@@ -4,6 +4,7 @@ import xarray as xr
 import pandas as pd
 import rasterio
 from rasterio.transform import from_origin
+from meteohub.module_log import Logger
 # from rasterio.warp import calculate_default_transform, reproject, Resampling
 # from pyproj import CRS, Proj, transform
 
@@ -20,12 +21,9 @@ def get_grib_variable(grib_file, varname, bbox=None):
     return df
 
 
-def dataframe_to_tiff(df, varname, bbox, out_tiff):
+def dataframe_to_tiff(df, varname, out_tiff):
     # Define the resolution of the grid
     resolution = 0.02  # Adjust as necessary
-
-    df = df[(df['longitude'] >= 14.21) & (df['longitude'] <= 14.31)]
-    df = df[(df['latitude'] >= 46.05) & (df['latitude'] <= 46.15)]
 
     # Generate the grid based on latitude and longitude
     lon_min, lon_max = df['longitude'].min(), df['longitude'].max()
@@ -48,9 +46,10 @@ def dataframe_to_tiff(df, varname, bbox, out_tiff):
 
     # Save the data as a GeoTIFF
     if out_tiff and out_tiff.endswith('.tif'):
-        pass
+        Logger.info(f"File name provided: {out_tiff}")
     else:
         out_tiff = f'out.tif'
+        Logger.info(f"No output file name provided, saving file as: {out_tiff}")
 
     if os.path.exists(out_tiff):
         os.remove(out_tiff)
