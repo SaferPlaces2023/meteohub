@@ -22,7 +22,6 @@ setuptools.setup(
         'wheel',
         'setuptools',
         'click',
-        'gdal==3.4.1',
         'eccodes',
         'ecmwflibs',
         'requests',
