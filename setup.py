@@ -1,6 +1,6 @@
 import setuptools
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 PACKAGE_NAME = "meteohub"
 
 setuptools.setup(
@@ -22,8 +22,16 @@ setuptools.setup(
         'wheel',
         'setuptools',
         'click',
+        'gdal==3.4.1',
         'eccodes',
-        'gdal'
+        'ecmwflibs',
+        'requests',
+        'pandas',
+        'rasterio',
+        'xarray[complete]',
+        'pygrib',
+        'cfgrib',
+        'numpy',
     ],
     entry_points="""
       [console_scripts]
