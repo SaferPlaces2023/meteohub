@@ -106,18 +106,22 @@ def main(dataset, date, out, varname, bbox, version, debug ,verbose):
 
     df = get_grib_variable(file_grib, varname, bbox)
 
-    if not out:
-        out_tiff = file_grib.replace('.grib', '.tif')
+    if df:
 
-    Logger.info(f"Output tif file name:{out_tiff}")
-    try:
-        dataframe_to_tiff(df, varname, out_tiff)
-    except Exception as e:
-        Logger.error(f"Error converting the file:{e}")
+        if not out:
+            out_tiff = file_grib.replace('.grib', '.tif')
+
+        Logger.info(f"Output tif file name:{out_tiff}")
+        try:
+            dataframe_to_tiff(df, varname, out_tiff)
+        except Exception as e:
+            Logger.error(f"Error converting the file:{e}")
+            return False
+        
+        Logger.info(f"Output tif file name:{out_tiff}")
+
+
+        # click.echo(click.style(f"Hello world!", fg="bright_green", bold=True))
+        return True
+    else:
         return False
-    
-    Logger.info(f"Output tif file name:{out_tiff}")
-
-
-    # click.echo(click.style(f"Hello world!", fg="bright_green", bold=True))
-    return True

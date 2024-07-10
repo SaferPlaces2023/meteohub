@@ -11,8 +11,13 @@ from meteohub.module_log import Logger
 
 def get_grib_variable(grib_file, varname, bbox=None):
     ds = xr.open_dataset(grib_file, engine='cfgrib', filter_by_keys={'stepType': 'accum'})
-    df = ds[varname].to_dataframe()
-    print(df)
+    try:
+        ds = ds[varname]
+    except KeyError:
+        Logger.error(f"Variable {varname} not found in the grib file. Available varnames: {list(ds.data_vars)}")
+        return None
+
+    df = ds.to_dataframe()
 
     if bbox:
         df = df[(df['longitude'] >= bbox[0]) & (df['longitude'] <= bbox[2])]
@@ -40,7 +45,7 @@ def dataframe_to_tiff(df, varname, out_tiff):
             nearest_index = distances.idxmin()
             rain_grid[i, j] = df.loc[nearest_index, varname]
 
-    print(rain_grid.shape, rain_grid.min(), rain_grid.max())
+    # print(rain_grid.shape, rain_grid.min(), rain_grid.max())
     # Define the transform
     transform = from_origin(lon_min, lat_max, resolution, resolution)
 
