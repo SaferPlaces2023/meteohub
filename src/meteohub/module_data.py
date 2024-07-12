@@ -66,8 +66,11 @@ def dataframe_to_tiff(df, varname, out_tiff):
             distances = np.sqrt((df['longitude'] - lon_grid[i, j])**2 + (df['latitude'] - lat_grid[i, j])**2)
             nearest_index = distances.idxmin()
             rain_grid[i, j] = df.loc[nearest_index, varname]
+            
+    
+    # set 0 to nan
+    rain_grid[rain_grid == 0] = np.nan
 
-    # print(rain_grid.shape, rain_grid.min(), rain_grid.max())
     # Define the transform
     transform = from_origin(lon_min, lat_max, resolution, resolution)
 
@@ -81,6 +84,8 @@ def dataframe_to_tiff(df, varname, out_tiff):
     if os.path.exists(out_tiff):
         os.remove(out_tiff)
 
+    # set nodata value
+
     with rasterio.open(
         out_tiff, 'w',
         driver='GTiff',
@@ -90,6 +95,7 @@ def dataframe_to_tiff(df, varname, out_tiff):
         dtype=rain_grid.dtype,
         crs='EPSG:4326',
         transform=transform,
+        nodata=np.nan
     ) as dst:
         dst.write(rain_grid, 1)
 
