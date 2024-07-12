@@ -43,13 +43,15 @@ from .module_version import get_version
 @click.command()
 @click.option('--dataset',  type=click.STRING, required=False, default="COSMO-2I-RUC" ,help="The dataset to download. Default is 'COSMO-2I-RUC'.")
 @click.option('--date', type=click.STRING, required=False,  help="The datetime to download. Default is latest datetime available.")
+@click.option('--start_forecast', type=click.INT, required=False, default=1, help="The start forecast to download. Default is 1.")
+@click.option('--end_forecast', type=click.INT, required=False, default=None, help="The end forecast to download. Default is None.")
 @click.option('--out', type=click.Path(exists=False), required=False, default="", help="The output file name.")
 @click.option('--varname', type=click.STRING, required=False, default="rain_gsp", help="The variable name to extract from the grib file. Default is 'tp'.")
 @click.option('--bbox', type=click.STRING, required=False, default=None, help="The bounding box to extract the data. Default is None.")
 @click.option('--version', is_flag=True, required=False, default=False, help="Print the version.")
 @click.option('--debug', is_flag=True, required=False, default=False,   help="Debug mode.")
 @click.option('--verbose', is_flag=True, required=False, default=False, help="Print some words more about what is doing.")
-def main(dataset, date, out, varname, bbox, version, debug ,verbose):
+def main(dataset, date, start_forecast, end_forecast, out, varname, bbox, version, debug ,verbose):
     """
     meteohub is as client downloader for https://meteohub.mistralportal.it portal
     """
@@ -104,7 +106,7 @@ def main(dataset, date, out, varname, bbox, version, debug ,verbose):
         return False
     Logger.info(f"Grib file name:{file_grib}")
 
-    df = get_grib_variable(file_grib, varname, bbox)
+    df = get_grib_variable(file_grib, varname, bbox, start_forecast, end_forecast)
 
     if not df.empty:
 

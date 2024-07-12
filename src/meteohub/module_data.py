@@ -5,18 +5,40 @@ import pandas as pd
 import rasterio
 from rasterio.transform import from_origin
 from meteohub.module_log import Logger
-# from rasterio.warp import calculate_default_transform, reproject, Resampling
-# from pyproj import CRS, Proj, transform
+import numpy as np
 
-
-def get_grib_variable(grib_file, varname, bbox=None):
+def get_grib_variable(grib_file, varname, bbox=None, start_forecast=1, end_forecast=None):
     ds = xr.open_dataset(grib_file, engine='cfgrib', filter_by_keys={'stepType': 'accum'})
+
+    # convert start_forecast to timedelta64[ns]
+    start_timedelta_ns = np.timedelta64(start_forecast * 3600000000000, 'ns')
+    end_timedelta_ns = np.timedelta64(end_forecast * 3600000000000, 'ns') if end_forecast else None
+
     try:
+        # Extracting variable 
         ds = ds[varname]
+        
     except KeyError:
         Logger.error(f"Variable {varname} not found in the grib file. Available varnames: {list(ds.data_vars)}")
         return None
 
+    try:
+        if end_timedelta_ns:
+            ds = ds.sel(step=slice(start_timedelta_ns, end_timedelta_ns))
+        else:
+            ds = ds.sel(step=start_timedelta_ns)
+        # if step dimension equals 0 raise error
+        if ds['step'].count() == 0:
+            raise KeyError
+    except KeyError:
+        Logger.error(f"Forecast step not found in the grib file. Perhaps the forecast step is not available.")
+        return None
+    
+    if "step" in ds.dims:
+        # calculate the accumulated value for each step
+        ds = ds.sum(dim='step')
+    
+    # convert xr dataset to pd dataframe
     df = ds.to_dataframe()
 
     if bbox:
