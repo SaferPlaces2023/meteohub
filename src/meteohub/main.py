@@ -106,7 +106,7 @@ def main(dataset, date, out, varname, bbox, version, debug ,verbose):
 
     df = get_grib_variable(file_grib, varname, bbox)
 
-    if df:
+    if not df.empty:
 
         if not out:
             out_tiff = file_grib.replace('.grib', '.tif')
