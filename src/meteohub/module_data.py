@@ -66,10 +66,6 @@ def dataframe_to_tiff(df, varname, out_tiff):
             distances = np.sqrt((df['longitude'] - lon_grid[i, j])**2 + (df['latitude'] - lat_grid[i, j])**2)
             nearest_index = distances.idxmin()
             rain_grid[i, j] = df.loc[nearest_index, varname]
-            
-    
-    # set 0 to nan
-    rain_grid[rain_grid == 0] = np.nan
 
     # Define the transform
     transform = from_origin(lon_min, lat_max, resolution, resolution)
@@ -95,7 +91,7 @@ def dataframe_to_tiff(df, varname, out_tiff):
         dtype=rain_grid.dtype,
         crs='EPSG:4326',
         transform=transform,
-        nodata=np.nan
+        nodata=0
     ) as dst:
         dst.write(rain_grid, 1)
 
