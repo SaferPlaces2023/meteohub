@@ -4,6 +4,7 @@ import xarray as xr
 import pandas as pd
 import rasterio
 from rasterio.transform import from_origin
+from rasterio.warp import calculate_default_transform, reproject, Resampling
 from meteohub.module_log import Logger
 import numpy as np
 
@@ -70,29 +71,56 @@ def dataframe_to_tiff(df, varname, out_tiff):
     # Define the transform
     transform = from_origin(lon_min, lat_max, resolution, resolution)
 
-    # Save the data as a GeoTIFF
+    # Save the data as a GeoTIFF in EPSG:4326
     if out_tiff and out_tiff.endswith('.tif'):
         Logger.info(f"File name provided: {out_tiff}")
     else:
         out_tiff = f'out.tif'
         Logger.info(f"No output file name provided, saving file as: {out_tiff}")
 
-    if os.path.exists(out_tiff):
-        os.remove(out_tiff)
+    temp_tiff = 'temp.tif'
+    if os.path.exists(temp_tiff):
+        os.remove(temp_tiff)
 
-    # set nodata value
-
+    Logger.info(f"rain_grid.dtype: {rain_grid.dtype}")
     with rasterio.open(
-        out_tiff, 'w',
+        temp_tiff, 'w',
         driver='GTiff',
         height=rain_grid.shape[0],
         width=rain_grid.shape[1],
         count=1,
         dtype=rain_grid.dtype,
         crs='EPSG:4326',
-        transform=transform,
-        nodata=0
+        transform=transform
     ) as dst:
         dst.write(rain_grid, 1)
+
+    # Reproject to EPSG:6876
+    dst_crs = 'EPSG:6876'
+    with rasterio.open(temp_tiff) as src:
+        transform, width, height = calculate_default_transform(
+            src.crs, dst_crs, src.width, src.height, *src.bounds)
+        kwargs = src.meta.copy()
+        kwargs.update({
+            'crs': dst_crs,
+            'transform': transform,
+            'width': width,
+            'height': height
+        })
+
+        with rasterio.open(out_tiff, 'w', **kwargs) as dst:
+            for i in range(1, src.count + 1):
+                reproject(
+                    source=rasterio.band(src, i),
+                    destination=rasterio.band(dst, i),
+                    src_transform=src.transform,
+                    src_crs=src.crs,
+                    dst_transform=transform,
+                    dst_crs=dst_crs,
+                    resampling=Resampling.nearest
+                )
+
+    # Remove the temporary file
+    os.remove(temp_tiff)
 
     return out_tiff
