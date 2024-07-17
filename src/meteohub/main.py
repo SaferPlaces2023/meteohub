@@ -31,7 +31,7 @@
 # -------------------------------------------------------------------------------
 import click
 from datetime import datetime
-
+import os
 from meteohub.module_data import dataframe_to_tiff, get_grib_variable
 
 from .module_request import download_file
@@ -42,7 +42,8 @@ from .module_version import get_version
 
 @click.command()
 @click.option('--dataset',  type=click.STRING, required=False, default="COSMO-2I-RUC" ,help="The dataset to download. Default is 'COSMO-2I-RUC'.")
-@click.option('--date', type=click.STRING, required=False,  help="The datetime to download. Default is latest datetime available.")
+@click.option('--date', type=click.STRING, required=False,  help="The datetime to download with format %Y-%m-%d %H:%M:%S. Default is latest datetime available.")
+@click.option('--time_delta', type=click.INT, required=False, default=3, help="The time delta to search the file. Default is 3.")
 @click.option('--start_forecast', type=click.INT, required=False, default=1, help="The start forecast to download. Default is 1.")
 @click.option('--end_forecast', type=click.INT, required=False, default=None, help="The end forecast to download. Default is None.")
 @click.option('--out', type=click.Path(exists=False), required=False, default="", help="The output file name.")
@@ -51,7 +52,7 @@ from .module_version import get_version
 @click.option('--version', is_flag=True, required=False, default=False, help="Print the version.")
 @click.option('--debug', is_flag=True, required=False, default=False,   help="Debug mode.")
 @click.option('--verbose', is_flag=True, required=False, default=False, help="Print some words more about what is doing.")
-def main(dataset, date, start_forecast, end_forecast, out, varname, bbox, version, debug ,verbose):
+def main(dataset, date, time_delta, start_forecast, end_forecast, out, varname, bbox, version, debug ,verbose):
     """
     meteohub is as client downloader for https://meteohub.mistralportal.it portal
     """
@@ -70,60 +71,36 @@ def main(dataset, date, start_forecast, end_forecast, out, varname, bbox, versio
     if version:
         click.echo(f"v{get_version()}")
         return True
-    # do something with args
-    # 
-
-    # check args
-    if not date:
-        # search the latest datetime available for download
-        date = datetime.now()
-        # floor the datetime to the nearest 3hour
-        date = date.replace(minute=0, second=0, microsecond=0)
-        date = date.replace(hour=date.hour - date.hour % 3)
-        Logger.info(f"Searching the latest datetime available for download:{date}")
-        # TODO:
-        # try to download the dataset if not available try the previous datetime
-        # counter = 0
-        # while counter < 12:
-        #     try:
-        #         # download the dataset
-        #         file_grib = download_file(dataset)
-        #         # raise Exception("Not available")
-        #         break
-        #     except:
-        #         counter += 1
-        #         if date.hour-3 < 0:
-        #             date = date.replace(day=date.day - 1)
-        #             date = date.replace(hour=21)
-        #         else:
-        #             date = date.replace(hour=date.hour - 3)
-        #         Logger.info(f"Searching the latest datetime available for download:{date}")
     
     try:
-        file_grib = download_file(dataset)
+        file_grib = download_file(dataset, date=date, time_delta=time_delta)
+        if file_grib:
+            Logger.info(f"Downloaded file:{file_grib}")
+        else:
+            raise Exception("Error downloading the file")
     except Exception as e:
         Logger.error(f"Error downloading the file:{e}")
         return False
-    Logger.info(f"Grib file name:{file_grib}")
 
     df = get_grib_variable(file_grib, varname, bbox, start_forecast, end_forecast)
 
     if not df.empty:
 
         if not out:
-            out_tiff = file_grib.replace('.grib', '.tif')
+            out = file_grib.replace('.grib', '.tif')
 
-        Logger.info(f"Output tif file name:{out_tiff}")
+        Logger.info(f"Output tif file name:{out}")
         try:
-            dataframe_to_tiff(df, varname, out_tiff)
+            dataframe_to_tiff(df, varname, out)
         except Exception as e:
             Logger.error(f"Error converting the file:{e}")
             return False
         
-        Logger.info(f"Output tif file name:{out_tiff}")
+        Logger.info(f"Output tif file name:{out}")
 
+        # delete file grib
+        os.remove(file_grib)
 
-        # click.echo(click.style(f"Hello world!", fg="bright_green", bold=True))
         return True
     else:
         return False
