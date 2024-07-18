@@ -3,55 +3,42 @@ import pandas as pd
 from .module_log import *
 import os
 from datetime import datetime, timedelta
+import tempfile
 
-
-def download_file(dataset, date=None, time_delta=3):
+def download_file(dataset, date, run):
 
     url = f"https://meteohub.mistralportal.it/api/datasets/{dataset}/opendata"
     res = requests.get(url)
     files = pd.DataFrame(res.json())
-    Logger.debug(f"Files: {files}")
+    # Logger.debug(f"Files: {files}")
     
     if not date:
         files = files[files['date'] == files['date'].max()]
-        # search the latest datetime available for download
-        # date = datetime.now()
-        # # floor the datetime to the nearest time_delta hours
-        # date = date.replace(minute=0, second=0, microsecond=0)
-        # date = date.replace(hour=date.hour - date.hour % time_delta)
-        # Logger.info(f"Searching the latest datetime available for download:{date}")
     else:
-        
-        # convert date to datetime
+        # check if the date and run are in the correct format
         try:
-            date = datetime.strptime(date, '%Y-%m-%dT%H:%M:%S')
-            date_start = date
-            Logger.debug(f"Searching files from {date_start}, Type: {type(date_start)}")
-            date_end = date + timedelta(hours=time_delta)
-            Logger.debug(f"Searching files to {date_end}")
-            files['date'] = pd.to_datetime(files['date'])
-            Logger.debug(f"Searching files from {date_start} to {date_end}")
-            files = files[(files['date'] >= date_start) & (files['date'] <= date_end)]
+            datetime.strptime(date, '%Y-%m-%d')
+            datetime.strptime(run, '%H:%M')
         except ValueError:
-            Logger.error("Incorrect date format, should be YYYY-MM-DDTHH:MM:SS")
+            Logger.error("Incorrect date or run format. Date should be YYYY-MM-DD, run should be HH:MM")
             return False
-        Logger.info(f"DATE: {date}")
-    
-    
-
-    # Logger.info(f"Searching files from {date_start} to {date_end}")
-    
-    
+        try:
+            Logger.debug(f"Searching the date and run pair {date} {run}")
+            sel_files = files[(files['date'] == date) & (files['run'] == run)]
+            if sel_files.empty:
+                raise KeyError
+        except KeyError:
+            # create a list of tuples with date and run columns
+            dates = files[['date', 'run']].apply(tuple, axis=1)
+            Logger.error(f"Date {date} not found in the available dates and runs pairs: \n{dates.values}")
+            return False
         
-        
-    Logger.debug(f"Found {len(files)} files: {files['filename'].values}")
-    out_grib = files['filename'].values[0]
+    Logger.debug(f"Found {len(sel_files)} files: {sel_files['filename'].values}, date: {date}, run: {run}")
+    # save outgrib in a temporary folder
+    out_grib = os.path.join(tempfile.gettempdir(), sel_files['filename'].values[0])
     Logger.info(f"Downloading {out_grib}")
-    # if os.path.exists(out_grib):
-    #     Logger.info(f"File already exists: {out_grib}")
-    #     return out_grib
     
-    for filename in files['filename']:
+    for filename in sel_files['filename']:
         url = f"https://meteohub.mistralportal.it/api/opendata/{filename}"
         # NOTE the stream=True parameter below
         with requests.get(url, stream=True) as r:
@@ -62,6 +49,5 @@ def download_file(dataset, date=None, time_delta=3):
                     # and set chunk_size parameter to None.
                     #if chunk: 
                     f.write(chunk)
-        Logger.info(f"Downloaded {url}")
 
     return out_grib

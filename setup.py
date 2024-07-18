@@ -1,6 +1,6 @@
 import setuptools
 
-VERSION = "1.0.8"
+VERSION = "1.1.0"
 PACKAGE_NAME = "meteohub"
 
 setuptools.setup(
@@ -22,7 +22,6 @@ setuptools.setup(
         'wheel',
         'setuptools',
         'click',
-        'eccodes',
         'ecmwflibs',
         'requests',
         'pandas',
