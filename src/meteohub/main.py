@@ -65,6 +65,10 @@ def main(dataset, date, run, start_fc, end_fc, out, varname, bbox, t_srs, versio
         click.echo(f"v{get_version()}")
         return True
 
+    # checl out extension
+    if out and not out.endswith(".tif"):
+        Logger.error("The output file must be a tif file.")
+        return False
     # check bbox format
     if bbox:
         bbox = bbox.split(",")
