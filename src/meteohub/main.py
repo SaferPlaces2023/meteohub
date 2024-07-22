@@ -41,9 +41,9 @@ from .module_version import get_version
 
 
 @click.command()
-@click.option('--dataset',  type=click.STRING, required=True, default="COSMO-2I-RUC" ,help="The dataset to download. Default is 'COSMO-2I-RUC'.")
-@click.option('--date', type=click.STRING, required=True,  help="The datetime to download with format %Y-%m-%d. Default is latest datetime available.")
-@click.option('--run', type=click.STRING, required=True, default="00:00", help="The hour of forecast run to download in format %H:%M. Default is 00:00.")
+@click.option('--dataset',  type=click.STRING, required=False, default="COSMO-2I-RUC" ,help="The dataset to download. Default is 'COSMO-2I-RUC'.")
+@click.option('--date', type=click.STRING, required=False,  help="The datetime to download with format %Y-%m-%d. Default is latest datetime available.")
+@click.option('--run', type=click.STRING, required=False, default="00:00", help="The hour of forecast run to download in format %H:%M. Default is 00:00.")
 @click.option('--start_fc', type=click.INT, required=False, default=1, help="The hour at which the accumulation starts. Default is 1.")
 @click.option('--end_fc', type=click.INT, required=False, default=None, help="The hour at which the accumulation ends. Default is None.")
 @click.option('--out', type=click.Path(exists=False), required=False, default="", help="The output file name.")
