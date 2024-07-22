@@ -9,7 +9,7 @@ from meteohub.module_log import Logger
 import numpy as np
 import tempfile
 
-def get_grib_variable(grib_file, varname, bbox=None, start_fc=1, end_fc=None):
+def get_grib_variable(grib_file, varname, bbox=None, start_fc=1, end_fc=None, fc_range=False):
     ds: xr.Dataset = xr.open_dataset(grib_file, engine='cfgrib', filter_by_keys={'stepType': 'accum'})
 
     # convert start_forecast to timedelta64[ns]
@@ -34,19 +34,33 @@ def get_grib_variable(grib_file, varname, bbox=None, start_fc=1, end_fc=None):
         return None
     
     Logger.debug(f"DataArray:\n{ds}")
-    if "step" in ds.dims:
-        # calculate the accumulated value for each step
-        ds = ds.sum(dim='step',skipna=True)
+    if not fc_range:
+        if "step" in ds.dims:
+            # calculate the accumulated value for each step
+            ds = ds.sum(dim='step',skipna=True)
     
     # convert xr dataset to pd dataframe
     df = ds.to_dataframe()
-    Logger.debug(f"Dataframe:\n{df.describe()}")
+    Logger.debug(f"Dataframe description:\n{df.describe()}")
     if bbox:
         df = df[(df['longitude'] >= bbox[0]) & (df['longitude'] <= bbox[2]) & (df['latitude'] >= bbox[1]) & (df['latitude'] <= bbox[3])]
     return df
 
 
-def dataframe_to_tiff(df, varname, t_srs, out_tiff):
+def dataframe_to_tiff(df, varname, t_srs, out_tiff, fc_range):
+    
+    if fc_range:
+        # for each forecast valid_time create a tiff file
+        
+        for fc in df.index.get_level_values('step').unique():
+            df_fc = df[df.index.get_level_values('step') == fc]
+            out_tiff_fc = out_tiff.replace(".tif", f"_fc{fc}.tif")
+            create_tiff(df_fc, varname, t_srs, out_tiff_fc)
+    else:
+        create_tiff(df, varname, t_srs, out_tiff)
+
+
+def create_tiff(df, varname, t_srs, out_tiff):
     # Define the resolution of the grid
     resolution = 0.02  # Adjust as necessary
 

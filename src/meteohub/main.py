@@ -47,13 +47,14 @@ from .module_version import get_version
 @click.option('--start_fc', type=click.INT, required=False, default=1, help="The hour at which the accumulation starts. Default is 1.")
 @click.option('--end_fc', type=click.INT, required=False, default=None, help="The hour at which the accumulation ends. Default is None.")
 @click.option('--out', type=click.Path(exists=False), required=False, default="", help="The output file name.")
+@click.option('--fc_range', is_flag=True, required=False, default=False, help="If True the output will be multiple tif files, one for each forecast hour. Default is False")
 @click.option('--varname', type=click.STRING, required=False, default="rain_gsp", help="The variable name to extract from the grib file. Default is 'tp'.")
 @click.option('--bbox', type=click.STRING, required=False, default=None, help="The bounding box to extract the data. Default is None.")
 @click.option('--t_srs', type=click.STRING, required=False, default="EPSG:4326", help="The target spatial reference system. Default is 'EPSG:4326'.")
 @click.option('--version', is_flag=True, required=False, default=False, help="Print the version.")
 @click.option('--debug', is_flag=True, required=False, default=False,   help="Debug mode.")
 @click.option('--verbose', is_flag=True, required=False, default=False, help="Print some words more about what is doing.")
-def main(dataset, date, run, start_fc, end_fc, out, varname, bbox, t_srs, version, debug ,verbose):
+def main(dataset, date, run, start_fc, end_fc, out, fc_range, varname, bbox, t_srs, version, debug ,verbose):
     """
     meteohub is as client downloader for https://meteohub.mistralportal.it portal
     """
@@ -90,14 +91,14 @@ def main(dataset, date, run, start_fc, end_fc, out, varname, bbox, t_srs, versio
         Logger.error(f"Error downloading the file: {e}")
         return False
 
-    df = get_grib_variable(file_grib, varname, bbox, start_fc, end_fc)
+    df = get_grib_variable(file_grib, varname, bbox, start_fc, end_fc, fc_range)
 
     if df is not None:
 
         if not out:
             out = file_grib.replace('.grib', '.tif').split('/')[-1]
         try:
-            dataframe_to_tiff(df, varname, t_srs, out)
+            dataframe_to_tiff(df, varname, t_srs, out, fc_range)
         except Exception as e:
             Logger.error(f"Error converting the file: {e}")
             return False
