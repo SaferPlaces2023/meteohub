@@ -12,9 +12,11 @@ import tempfile
 def get_grib_variable(grib_file, varname, bbox=None, start_fc=1, end_fc=None, fc_range=False):
     ds: xr.Dataset = xr.open_dataset(grib_file, engine='cfgrib', filter_by_keys={'stepType': 'accum'})
 
-    # convert start_forecast to timedelta64[ns]
-    start_timedelta_ns = np.timedelta64(start_fc * 3600000000000, 'ns')
-    end_timedelta_ns = np.timedelta64(end_fc * 3600000000000, 'ns') if end_fc else None
+    # # convert start_forecast to timedelta64[ns]
+    # start_timedelta_ns = np.timedelta64(start_fc * 3600000000000, 'ns')
+    # end_timedelta_ns = np.timedelta64(end_fc * 3600000000000, 'ns') if end_fc else None
+    start_timedelta = np.timedelta64(start_fc, 'h')
+    end_timedelta = np.timedelta64(end_fc, 'h') if end_fc else None
 
     try:
         # Extracting variable 
@@ -25,7 +27,7 @@ def get_grib_variable(grib_file, varname, bbox=None, start_fc=1, end_fc=None, fc
         return None
 
     try:
-        ds = ds.sel(step=slice(start_timedelta_ns, end_timedelta_ns))
+        ds = ds.sel(step=slice(start_timedelta, end_timedelta))
         # # if step dimension equals 0 raise error
         if ds['step'].count() == 0:
             raise KeyError
