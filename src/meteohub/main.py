@@ -58,6 +58,9 @@ def main(dataset, date, run, start_fc, end_fc, out, fc_range, varname, bbox, t_s
     """
     meteohub is as client downloader for https://meteohub.mistralportal.it portal
     """
+    run_meteohub(dataset, date, run, start_fc, end_fc, out, fc_range, varname, bbox, t_srs, version, debug, verbose)
+    
+def run_meteohub(dataset, date, run, start_fc, end_fc, out, varname, bbox, fc_range=False, t_srs="EPSG:4326", version=False, debug=False, verbose=False):
     set_log_level(verbose, debug)
 
     if debug:

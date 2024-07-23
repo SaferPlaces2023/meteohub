@@ -1,6 +1,6 @@
 import setuptools
 
-VERSION = "1.1.2"
+VERSION = "1.1.3"
 PACKAGE_NAME = "meteohub"
 
 setuptools.setup(
