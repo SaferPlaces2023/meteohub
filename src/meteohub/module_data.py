@@ -101,9 +101,10 @@ def create_tiff(df, varname, t_srs, out_tiff):
             height=rain_grid.shape[0],
             width=rain_grid.shape[1],
             count=1,
-            dtype=rain_grid.dtype,
+            dtype=np.float32,
             crs='EPSG:4326',
-            transform=transform
+            transform=transform,
+            nodata=-9999
         ) as dst:
             dst.write(rain_grid, 1)
 

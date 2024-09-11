@@ -42,13 +42,13 @@ from .module_version import get_version
 
 @click.command()
 @click.option('--dataset',  type=click.STRING, required=False, default="COSMO-2I-RUC" ,help="The dataset to download. Default is 'COSMO-2I-RUC'.")
-@click.option('--date', type=click.STRING, required=False,  help="The datetime to download with format %Y-%m-%d. Default is latest datetime available.")
 @click.option('--run', type=click.STRING, required=False, default="00:00", help="The hour of forecast run to download in format %H:%M. Default is 00:00.")
 @click.option('--start_fc', type=click.INT, required=False, default=1, help="The hour at which the accumulation starts. Default is 1.")
 @click.option('--end_fc', type=click.INT, required=False, default=None, help="The hour at which the accumulation ends. Default is None.")
 @click.option('--out', type=click.Path(exists=False), required=False, default="", help="The output file name.")
 @click.option('--varname', type=click.STRING, required=False, default="rain_gsp", help="The variable name to extract from the grib file. Default is 'tp'.")
 @click.option('--bbox', type=click.STRING, required=False, default=None, help="The bounding box to extract the data. Default is None.")
+@click.option('--date', type=click.STRING, required=False,  help="The datetime to download with format %Y-%m-%d. Default is latest datetime available.")
 @click.option('--fc_range', is_flag=True, required=False, default=False, help="If True the output will be multiple tif files, one for each forecast hour. Default is False")
 @click.option('--t_srs', type=click.STRING, required=False, default="EPSG:4326", help="The target spatial reference system. Default is 'EPSG:4326'.")
 @click.option('--version', is_flag=True, required=False, default=False, help="Print the version.")
@@ -58,9 +58,9 @@ def main(dataset, date, run, start_fc, end_fc, out, varname, bbox, fc_range, t_s
     """
     meteohub is as client downloader for https://meteohub.mistralportal.it portal
     """
-    run_meteohub(dataset, date, run, start_fc, end_fc, out, varname, bbox, fc_range, t_srs, version, debug, verbose)
+    run_meteohub(dataset, run, start_fc, end_fc, out, varname, bbox, date, fc_range, t_srs, version, debug, verbose)
     
-def run_meteohub(dataset, date, run, start_fc, end_fc, out, varname, bbox, fc_range=False, t_srs="EPSG:4326", version=False, debug=False, verbose=False):
+def run_meteohub(dataset, run, start_fc, end_fc, out, varname, bbox, date=None, fc_range=False, t_srs="EPSG:4326", version=False, debug=False, verbose=False):
     set_log_level(verbose, debug)
 
     if debug:
@@ -85,7 +85,7 @@ def run_meteohub(dataset, date, run, start_fc, end_fc, out, varname, bbox, fc_ra
             return False
     
     try:
-        file_grib = download_file(dataset, date=date, run=run)
+        file_grib = download_file(dataset, date=date, run=run, debug=debug)
         if file_grib:
             Logger.info(f"Downloaded {file_grib}")
         else:
@@ -109,7 +109,11 @@ def run_meteohub(dataset, date, run, start_fc, end_fc, out, varname, bbox, fc_ra
         Logger.info(f"Output tif file name: {out}")
 
         # delete file grib
-        os.remove(file_grib)
+        if debug:
+            # Logger.info(f"{file_grib}")
+            pass
+        else:
+            os.remove(file_grib)
 
         return True
     else:
