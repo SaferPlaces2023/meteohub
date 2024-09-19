@@ -56,7 +56,8 @@ def dataframe_to_tiff(df, varname, t_srs, out_tiff, fc_range):
         
         for fc in df.index.get_level_values('step').unique():
             df_fc = df[df.index.get_level_values('step') == fc]
-            out_tiff_fc = out_tiff.replace(".tif", f"_fc_{str(int(fc.total_seconds() / 3600))}h.tif")
+            out_tiff_fc = out_tiff.replace(".tif", f"_fc{fc}.tif")
+            # out_tiff_fc = out_tiff.replace(".tif", f"_fc_{str(int(fc.total_seconds() / 3600))}h.tif")
             create_tiff(df_fc, varname, t_srs, out_tiff_fc)
     else:
         create_tiff(df, varname, t_srs, out_tiff)
