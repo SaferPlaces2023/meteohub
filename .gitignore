@@ -168,3 +168,10 @@ cython_debug/
 *.tif
 *.xml
 *.idx
+*.shp
+*.shx
+*.qmd
+*.prj
+*.dbf
+*.cpg
+*:Zone.Identifier

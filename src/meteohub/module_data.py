@@ -49,14 +49,17 @@ def get_grib_variable(grib_file, varname, bbox=None, start_fc=1, end_fc=None, fc
     return df
 
 
-def dataframe_to_tiff(df, varname, t_srs, out_tiff, fc_range):
+def dataframe_to_tiff(df, varname, t_srs, out_tiff, fc_range, run):
     
     if fc_range:
         # for each forecast valid_time create a tiff file
         
         for fc in df.index.get_level_values('step').unique():
             df_fc = df[df.index.get_level_values('step') == fc]
-            out_tiff_fc = out_tiff.replace(".tif", f"_fc{fc}.tif")
+            hour_run = int(run.split(":")[0])
+            hour_fc = fc + pd.Timedelta(hours=hour_run)
+
+            out_tiff_fc = out_tiff.replace(".tif", f"_fc{hour_fc}.tif")
             # out_tiff_fc = out_tiff.replace(".tif", f"_fc_{str(int(fc.total_seconds() / 3600))}h.tif")
             create_tiff(df_fc, varname, t_srs, out_tiff_fc)
     else:

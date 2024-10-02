@@ -101,7 +101,7 @@ def run_meteohub(dataset, run, start_fc, end_fc, out, varname, bbox, date=None, 
         if not out:
             out = file_grib.replace('.grib', '.tif').split('/')[-1]
         try:
-            dataframe_to_tiff(df, varname, t_srs, out, fc_range)
+            dataframe_to_tiff(df, varname, t_srs, out, fc_range, run)
         except Exception as e:
             Logger.error(f"Error converting the file: {e}")
             return False
