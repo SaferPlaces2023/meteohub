@@ -12,8 +12,11 @@ if current_date.hour < 19:
 else:
     current_run = "12:00"
 
+current_year_month_day = "2025-04-09"
+current_run = "00:00"
+
 # Define the parameters for the meteohub command
-dataset = "COSMO-2I"
+dataset = "ICON-2I_all2km"
 varname = "tp"
 bbox = "10.623676,44.792615,14.129578,46.679835"
 start_fc = 1
@@ -29,7 +32,7 @@ os.makedirs(output_dir, exist_ok=True)
 output_filename = f"{output_dir}{dataset}_{varname}_{current_year_month_day}_{current_run}_{start_fc}-{end_fc}.tif"
 
 # Construct the command
-command = f"/home/cmve/.local/bin/meteohub --verbose --dataset {dataset} --varname {varname} --bbox {bbox} --date {current_year_month_day} --run {current_run} --start_fc {start_fc} --end_fc {end_fc} --out {output_filename} --fc_range"
+command = f"meteohub --debug --verbose --dataset {dataset} --varname {varname} --bbox {bbox} --date {current_year_month_day} --run {current_run} --start_fc {start_fc} --end_fc {end_fc} --out {output_filename} --fc_range"
 
 attempt = 0
 # Execute the command

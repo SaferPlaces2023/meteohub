@@ -9,7 +9,7 @@ from meteohub.module_log import Logger
 import numpy as np
 import tempfile
 
-def get_grib_variable(grib_file, varname, bbox=None, start_fc=1, end_fc=None, fc_range=False):
+def get_grib_variable(grib_file, varname, bbox=None, start_fc=1, end_fc=None, fc_range=False, dataset="COSMO-2I"):
     ds: xr.Dataset = xr.open_dataset(grib_file, engine='cfgrib', filter_by_keys={'stepType': 'accum'})
 
     # # convert start_forecast to timedelta64[ns]
@@ -40,16 +40,18 @@ def get_grib_variable(grib_file, varname, bbox=None, start_fc=1, end_fc=None, fc
         if "step" in ds.dims:
             # calculate the accumulated value for each step
             ds = ds.sum(dim='step',skipna=True)
-    
+    if bbox and dataset == "ICON-2I_all2km":
+        # filter the data by bbox
+        ds = ds.sel(latitude=slice(bbox[1], bbox[3]), longitude=slice(bbox[0], bbox[2]))
     # convert xr dataset to pd dataframe
     df = ds.to_dataframe()
     Logger.debug(f"Dataframe description:\n{df.describe()}")
-    if bbox:
+    if bbox and dataset == "COSMO-2I":
         df = df[(df['longitude'] >= bbox[0]) & (df['longitude'] <= bbox[2]) & (df['latitude'] >= bbox[1]) & (df['latitude'] <= bbox[3])]
     return df
 
 
-def dataframe_to_tiff(df, varname, t_srs, out_tiff, fc_range, run):
+def dataframe_to_tiff(df, varname, t_srs, out_tiff, fc_range, run, dataset):
     
     if fc_range:
         # for each forecast valid_time create a tiff file
@@ -61,28 +63,46 @@ def dataframe_to_tiff(df, varname, t_srs, out_tiff, fc_range, run):
 
             out_tiff_fc = out_tiff.replace(".tif", f"_fc{hour_fc}.tif")
             # out_tiff_fc = out_tiff.replace(".tif", f"_fc_{str(int(fc.total_seconds() / 3600))}h.tif")
-            create_tiff(df_fc, varname, t_srs, out_tiff_fc)
+            create_tiff(df_fc, varname, t_srs, out_tiff_fc, dataset)
     else:
-        create_tiff(df, varname, t_srs, out_tiff)
+        create_tiff(df, varname, t_srs, out_tiff, dataset)
 
 
-def create_tiff(df, varname, t_srs, out_tiff):
+def create_tiff(df, varname, t_srs, out_tiff, dataset):
     # Define the resolution of the grid
     resolution = 0.02  # Adjust as necessary
-
     # Generate the grid based on latitude and longitude
-    lon_min, lon_max = df['longitude'].min(), df['longitude'].max()
-    lat_min, lat_max = df['latitude'].min(), df['latitude'].max()
+    if dataset == "COSMO-2I":
+        lon_min, lon_max = df['longitude'].min(), df['longitude'].max()
+        lat_min, lat_max = df['latitude'].min(), df['latitude'].max()
+    elif dataset == "ICON-2I_all2km":
+        lon_min, lon_max = df.index.get_level_values('longitude').min(), df.index.get_level_values('longitude').max()
+        lat_min, lat_max = df.index.get_level_values('latitude').min(), df.index.get_level_values('latitude').max()
+    else:
+        return None
     lon_grid = np.arange(lon_min, lon_max, resolution)
     lat_grid = np.arange(lat_min, lat_max, resolution)
     lon_grid, lat_grid = np.meshgrid(lon_grid, lat_grid)
 
     # Interpolate the rain_gsp values to the grid
     rain_grid = np.zeros_like(lon_grid)
+
+    if dataset == "ICON-2I_all2km":
+        # Get the lat/lon from index once for performance
+        lons = df.index.get_level_values('longitude')
+        lats = df.index.get_level_values('latitude')
+
     for i in range(lon_grid.shape[0]):
         for j in range(lon_grid.shape[1]):
-            distances = np.sqrt((df['longitude'] - lon_grid[i, j])**2 + (df['latitude'] - lat_grid[i, j])**2)
-            nearest_index = distances.idxmin()
+            if dataset == "COSMO-2I":
+                distances = np.sqrt((df['longitude'] - lon_grid[i, j])**2 + (df['latitude'] - lat_grid[i, j])**2)
+                nearest_index = distances.idxmin()
+            elif dataset == "ICON-2I_all2km":
+                distances = np.sqrt((lons - lon_grid[i, j])**2 + (lats - lat_grid[i, j])**2)
+                distances_series = pd.Series(distances, index=df.index)  # Convert to Series
+                nearest_index = distances_series.idxmin()
+            else:
+                return None
             rain_grid[i, j] = df.loc[nearest_index, varname]
 
     # Define the transform
