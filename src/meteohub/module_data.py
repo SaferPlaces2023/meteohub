@@ -40,7 +40,7 @@ def get_grib_variable(grib_file, varname, bbox=None, start_fc=1, end_fc=None, fc
         if "step" in ds.dims:
             # calculate the accumulated value for each step
             ds = ds.sum(dim='step',skipna=True)
-    if bbox and dataset == "ICON-2I_all2km":
+    if bbox and dataset == "ICON-2I_all2km" or dataset == "ICON_2I_SURFACE_PRESSURE_LEVELS":
         # filter the data by bbox
         ds = ds.sel(latitude=slice(bbox[1], bbox[3]), longitude=slice(bbox[0], bbox[2]))
     # convert xr dataset to pd dataframe
@@ -75,7 +75,7 @@ def create_tiff(df, varname, t_srs, out_tiff, dataset):
     if dataset == "COSMO-2I":
         lon_min, lon_max = df['longitude'].min(), df['longitude'].max()
         lat_min, lat_max = df['latitude'].min(), df['latitude'].max()
-    elif dataset == "ICON-2I_all2km":
+    elif dataset == "ICON-2I_all2km" or dataset == "ICON_2I_SURFACE_PRESSURE_LEVELS":
         lon_min, lon_max = df.index.get_level_values('longitude').min(), df.index.get_level_values('longitude').max()
         lat_min, lat_max = df.index.get_level_values('latitude').min(), df.index.get_level_values('latitude').max()
     else:
@@ -87,7 +87,7 @@ def create_tiff(df, varname, t_srs, out_tiff, dataset):
     # Interpolate the rain_gsp values to the grid
     rain_grid = np.zeros_like(lon_grid)
 
-    if dataset == "ICON-2I_all2km":
+    if dataset == "ICON-2I_all2km" or dataset == "ICON_2I_SURFACE_PRESSURE_LEVELS":
         # Get the lat/lon from index once for performance
         lons = df.index.get_level_values('longitude')
         lats = df.index.get_level_values('latitude')
@@ -97,7 +97,7 @@ def create_tiff(df, varname, t_srs, out_tiff, dataset):
             if dataset == "COSMO-2I":
                 distances = np.sqrt((df['longitude'] - lon_grid[i, j])**2 + (df['latitude'] - lat_grid[i, j])**2)
                 nearest_index = distances.idxmin()
-            elif dataset == "ICON-2I_all2km":
+            elif dataset == "ICON-2I_all2km" or dataset == "ICON_2I_SURFACE_PRESSURE_LEVELS":
                 distances = np.sqrt((lons - lon_grid[i, j])**2 + (lats - lat_grid[i, j])**2)
                 distances_series = pd.Series(distances, index=df.index)  # Convert to Series
                 nearest_index = distances_series.idxmin()
