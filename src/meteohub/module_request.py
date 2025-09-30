@@ -46,7 +46,7 @@ def download_file(dataset, date, run, debug=False):
             return out_grib
     
     for filename in sel_files['filename']:
-        url = f"https://meteohub.agenziaitaliameteo.it/api/datasets/{filename}"
+        url = f"https://meteohub.agenziaitaliameteo.it/api/opendata/{filename}"
         # NOTE the stream=True parameter below
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
