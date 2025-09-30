@@ -56,7 +56,7 @@ from .module_version import get_version
 @click.option('--verbose', is_flag=True, required=False, default=False, help="Print some words more about what is doing.")
 def main(dataset, date, run, start_fc, end_fc, out, varname, bbox, fc_range, t_srs, version, debug ,verbose):
     """
-    meteohub is as client downloader for https://meteohub.mistralportal.it portal
+    meteohub is as client downloader for https://meteohub.agenziaitaliameteo.it portal
     """
     run_meteohub(dataset, run, start_fc, end_fc, out, varname, bbox, date, fc_range, t_srs, version, debug, verbose)
     

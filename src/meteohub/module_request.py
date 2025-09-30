@@ -7,7 +7,7 @@ import tempfile
 
 def download_file(dataset, date, run, debug=False):
 
-    url = f"https://meteohub.mistralportal.it/api/datasets/{dataset}/opendata"
+    url = f"https://meteohub.agenziaitaliameteo.it/api/datasets/{dataset}/opendata"
     res = requests.get(url)
     files = pd.DataFrame(res.json())
     # Logger.debug(f"Files: {files}")
@@ -46,7 +46,7 @@ def download_file(dataset, date, run, debug=False):
             return out_grib
     
     for filename in sel_files['filename']:
-        url = f"https://meteohub.mistralportal.it/api/opendata/{filename}"
+        url = f"https://meteohub.agenziaitaliameteo.it/api/datasets/{filename}"
         # NOTE the stream=True parameter below
         with requests.get(url, stream=True) as r:
             r.raise_for_status()

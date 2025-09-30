@@ -1,5 +1,5 @@
 # meteohub
-https://meteohub.mistralportal.it/ downloader
+https://meteohub.agenziaitaliameteo.it downloader
 
 # Install GDAL
 Check if the os has GDAL included by running 
